@@ -17,9 +17,9 @@ dupdig <source_directory> <output_directory>
 
 - `duplicates.txt` — duplicate files sorted by wasted space
 - `files.txt` — all files with hashes and sizes
-- `empty-files.txt` — empty files
-- `empty-dirs.txt` — empty directories
-- `errors.txt` — errors encountered
+- `empty-files.txt` — list of empty files
+- `empty-dirs.txt` — list of empty directories
+- `errors.txt` — errors encountered during traversal
 - `rm-duplicates.sh` — script to delete duplicates
 
 ## FAQ
