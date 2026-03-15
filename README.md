@@ -25,13 +25,17 @@ dupdig <source_directory> <output_directory>
 ## FAQ
 
 **What about symlinks?**
+
 Symlinks are skipped. Only regular files are hashed.
 
 **What about hard links and copy-on-write files?**
+
 Not supported. Each path is treated as a separate file.
 
 **Why hash every file? Can't you skip files with unique sizes?**
+
 A common optimization is to only hash files that share the same size, and then stop hashing as soon as the bytes diverge. We intentionally skip this and fully hash every file because it also serves as a storage integrity check, similar to a ZFS scrub, catching bit-rot and silent data corruption.
 
 **Why SHA-256 instead of a faster non-cryptographic hash like XXH3?**
+
 SHA-256 is the most common hash used for verifying data integrity. Using it means you can directly compare hashes against officially published values, for example when verifying Linux ISO downloads, without needing a second tool.
