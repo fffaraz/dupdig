@@ -34,7 +34,7 @@ Not supported. Each path is treated as a separate file.
 
 **Why hash every file? Can't you skip files with unique sizes?**
 
-A common optimization is to only hash files that share the same size, and then stop hashing as soon as the bytes diverge. We intentionally skip this and fully hash every file because it also serves as a storage integrity check, similar to a ZFS scrub, catching bit-rot and silent data corruption.
+A common optimization is to only hash files that share the same size, and then stop hashing as soon as the bytes diverge. We intentionally skip this and fully hash every file because it also serves as a storage integrity check, similar to a ZFS scrub, catching bit-rot and silent data corruption. It is recommended to keep `files.txt` in a git repo to track changes across different runs over time.
 
 **Why SHA-256 instead of a faster non-cryptographic hash like XXH3?**
 
