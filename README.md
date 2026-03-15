@@ -39,3 +39,7 @@ A common optimization is to only hash files that share the same size, and then s
 **Why SHA-256 instead of a faster non-cryptographic hash like XXH3?**
 
 SHA-256 is the most common hash used for verifying data integrity. Using it means you can directly compare hashes against officially published values, for example when verifying Linux ISO downloads, without needing a second tool.
+
+**Why remove duplicates instead of replacing them with hard links?**
+
+Hard links are not supported across different filesystems or mount points, and many tools and backup systems do not handle them correctly.
