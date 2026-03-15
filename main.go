@@ -135,6 +135,7 @@ func main() {
 			}
 			return nil
 		}
+
 		if info.Mode()&os.ModeSymlink != 0 {
 			fmt.Fprintf(errorsFile, "skipping symlink: %s\n", path)
 			return nil
@@ -158,6 +159,11 @@ func main() {
 				size: 0,
 				path: strings.TrimPrefix(path, sourcePrefix),
 			})
+			return nil
+		}
+
+		if !info.Mode().IsRegular() {
+			fmt.Fprintf(errorsFile, "skipping non-regular file: %s\n", path)
 			return nil
 		}
 
