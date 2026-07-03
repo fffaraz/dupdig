@@ -36,8 +36,8 @@ var ignoredDirs = map[string]bool{
 var systemDirs = map[string]bool{
 	"/dev":  true,
 	"/proc": true,
-	"/sys":  true,
 	"/run":  true,
+	"/sys":  true,
 }
 
 type fileInfo struct {
@@ -54,12 +54,13 @@ type dupGroup struct {
 	paths []string // sorted list of relative paths of duplicate files
 }
 
-var dirHash = strings.Repeat("0", sha256.Size*2) // hash for directories (all zeros)
+var dirHash = strings.Repeat("0", sha256.Size*2) // hard-coded hash for directory paths (all zeros)
 
 func main() {
 	if len(os.Args) != 3 {
 		fmt.Fprintf(os.Stderr, "usage: %s <source directory> <output directory>\n", os.Args[0])
 		os.Exit(1)
+		return
 	}
 
 	sourceDir := os.Args[1]
@@ -71,7 +72,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// create output files errors.txt
+	// create "errors.txt" output file
 	errorsFile, err := os.Create(filepath.Join(outputDir, "errors.txt"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating errors.txt: %v\n", err)
@@ -79,7 +80,7 @@ func main() {
 	}
 	defer errorsFile.Close()
 
-	// create empty-dirs.txt output file
+	// create "empty-dirs.txt" output file
 	emptyDirsFile, err := os.Create(filepath.Join(outputDir, "empty-dirs.txt"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating empty-dirs.txt: %v\n", err)
@@ -87,7 +88,7 @@ func main() {
 	}
 	defer emptyDirsFile.Close()
 
-	// create empty-files.txt output file
+	// create "empty-files.txt" output file
 	emptyFilesFile, err := os.Create(filepath.Join(outputDir, "empty-files.txt"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating empty-files.txt: %v\n", err)
@@ -95,7 +96,7 @@ func main() {
 	}
 	defer emptyFilesFile.Close()
 
-	// create duplicates.txt output file
+	// create "duplicates.txt" output file
 	duplicatesFile, err := os.Create(filepath.Join(outputDir, "duplicates.txt"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating duplicates.txt: %v\n", err)
@@ -103,7 +104,7 @@ func main() {
 	}
 	defer duplicatesFile.Close()
 
-	// create files.txt output file
+	// create "files.txt" output file
 	filesFile, err := os.Create(filepath.Join(outputDir, "files.txt"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating files.txt: %v\n", err)
@@ -111,7 +112,7 @@ func main() {
 	}
 	defer filesFile.Close()
 
-	// create rm-duplicates.sh output file
+	// create "rm-duplicates.sh" output file
 	rmDuplicatesFile, err := os.Create(filepath.Join(outputDir, "rm-duplicates.sh"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating rm-duplicates.sh: %v\n", err)
@@ -122,7 +123,6 @@ func main() {
 
 	var files []fileInfo
 	sourcePrefix := filepath.Clean(sourceDir) + string(filepath.Separator)
-	counter := 0
 
 	fmt.Printf("%s Starting scan of %s...\n", time.Now().Format("2006-01-02 15:04:05"), sourceDir)
 	startTime := time.Now()
@@ -186,9 +186,8 @@ func main() {
 			path: strings.TrimPrefix(path, sourcePrefix),
 		})
 
-		counter++
-		if counter%100 == 0 {
-			fmt.Printf("%s %d files hashed...\n", time.Now().Format("2006-01-02 15:04:05"), counter)
+		if len(files)%100 == 0 {
+			fmt.Printf("%s %d files hashed...\n", time.Now().Format("2006-01-02 15:04:05"), len(files))
 		}
 		return nil
 	})
@@ -201,7 +200,7 @@ func main() {
 	hours := int(elapsed.Hours())
 	mins := int(elapsed.Minutes()) - hours*60
 	secs := elapsed.Seconds() - float64(hours*3600+mins*60)
-	fmt.Printf("%s Hashed %d files in %dh%dm%.2fs\n", time.Now().Format("2006-01-02 15:04:05"), counter, hours, mins, secs)
+	fmt.Printf("%s Hashed %d files in %dh%dm%.2fs\n", time.Now().Format("2006-01-02 15:04:05"), len(files), hours, mins, secs)
 
 	// Find duplicates (group files by hash, ignoring directories)
 	hashGroups := make(map[string][]fileInfo)
