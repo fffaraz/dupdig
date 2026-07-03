@@ -122,6 +122,7 @@ func main() {
 	fmt.Fprintf(rmDuplicatesFile, "#!/bin/bash\n\n# This script deletes duplicate files listed in duplicates.txt\n# Review the file before running this script!\n\n")
 
 	sourcePrefix := filepath.Clean(sourceDir) + string(filepath.Separator)
+	outputAbs, _ := filepath.Abs(outputDir) // to skip our own output dir if it lives inside the source tree
 	fmt.Printf("%s Starting scan of %s...\n", time.Now().Format("2006-01-02 15:04:05"), sourceDir)
 	var files []fileInfo
 	startTime := time.Now()
@@ -149,6 +150,10 @@ func main() {
 			if ignoredDirs[info.Name()] {
 				fmt.Fprintf(errorsFile, "skipping ignored directory: %s\n", path)
 				return filepath.SkipDir // skip ignored directories
+			}
+			if absPath == outputAbs {
+				fmt.Fprintf(errorsFile, "skipping output directory: %s\n", path)
+				return filepath.SkipDir // skip our own output directory
 			}
 			if path == sourceDir {
 				return nil // skip the root directory itself
