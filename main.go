@@ -121,10 +121,9 @@ func main() {
 	defer rmDuplicatesFile.Close()
 	fmt.Fprintf(rmDuplicatesFile, "#!/bin/bash\n\n# This script deletes duplicate files listed in duplicates.txt\n# Review the file before running this script!\n\n")
 
-	var files []fileInfo
 	sourcePrefix := filepath.Clean(sourceDir) + string(filepath.Separator)
-
 	fmt.Printf("%s Starting scan of %s...\n", time.Now().Format("2006-01-02 15:04:05"), sourceDir)
+	var files []fileInfo
 	startTime := time.Now()
 
 	errWalk := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
@@ -194,13 +193,14 @@ func main() {
 	if errWalk != nil {
 		fmt.Fprintf(errorsFile, "error: %v\n", errWalk)
 		os.Exit(2)
+		return
 	}
 
 	elapsed := time.Since(startTime)
 	hours := int(elapsed.Hours())
 	mins := int(elapsed.Minutes()) - hours*60
 	secs := elapsed.Seconds() - float64(hours*3600+mins*60)
-	fmt.Printf("%s Hashed %d files in %dh%dm%.2fs\n", time.Now().Format("2006-01-02 15:04:05"), len(files), hours, mins, secs)
+	fmt.Printf("%s Hashed %d files in %dh%dm%.3fs\n", time.Now().Format("2006-01-02 15:04:05"), len(files), hours, mins, secs)
 
 	// Find duplicates (group files by hash, ignoring directories)
 	hashGroups := make(map[string][]fileInfo)
@@ -248,10 +248,10 @@ func main() {
 		for _, d := range dups {
 			totalWaste += d.waste
 		}
-		fmt.Fprintf(duplicatesFile, "=== %d Duplicate Files (%.2f MB wasted) ===\n\n", len(dups), float64(totalWaste)/(1024*1024))
+		fmt.Fprintf(duplicatesFile, "=== %d Duplicate Files (%.2f MiB wasted) ===\n\n", len(dups), float64(totalWaste)/(1024*1024))
 		for _, d := range dups {
 			sizeMB := float64(d.size) / (1024 * 1024)
-			fmt.Fprintf(duplicatesFile, "%.2f MB = %d x %.2f MB\t%s\n", sizeMB*float64(d.count), d.count, sizeMB, d.hash)
+			fmt.Fprintf(duplicatesFile, "%.2f MiB = %d x %.2f MiB\t%s\n", sizeMB*float64(d.count), d.count, sizeMB, d.hash)
 			first := true
 			for _, p := range d.paths {
 				fmt.Fprintf(duplicatesFile, "\t%s\n", p)
@@ -266,6 +266,8 @@ func main() {
 			fmt.Fprintln(rmDuplicatesFile)
 		}
 	}
+	duplicatesFile.Close()
+	rmDuplicatesFile.Close()
 
 	// Collect stats
 	var numFiles, numDirs, numEmpty int
@@ -309,11 +311,14 @@ func main() {
 	}
 	sort.Strings(emptyDirs)
 
+	// Print empty directories to empty-dirs.txt
 	fmt.Fprintf(emptyDirsFile, "=== %d empty directories ===\n\n", len(emptyDirs))
 	for _, d := range emptyDirs {
 		fmt.Fprintf(emptyDirsFile, "%s\n", d)
 	}
+	emptyDirsFile.Close()
 
+	// Print summary to files.txt and empty-files.txt
 	fmt.Fprintf(filesFile, "=== %d files, %d directories, %d empty files, %d empty directories ===\n", numFiles, numDirs, numEmpty, len(emptyDirs))
 	fmt.Fprintf(emptyFilesFile, "=== %d empty files === e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n\n", numEmpty)
 	for _, f := range files {
@@ -322,6 +327,8 @@ func main() {
 			fmt.Fprintf(emptyFilesFile, "%s\n", f.path)
 		}
 	}
+	filesFile.Close()
+	emptyFilesFile.Close()
 
 	fmt.Printf("%s Done!\n", time.Now().Format("2006-01-02 15:04:05"))
 }
