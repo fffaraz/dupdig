@@ -49,3 +49,7 @@ SHA-256 is the most common hash used for verifying data integrity. Using it mean
 **Why remove duplicates instead of replacing them with hard links?**
 
 Hard links are not supported across different filesystems or mount points, and many tools and backup systems do not handle them correctly.
+
+## License
+
+[GPL-3.0](LICENSE)
