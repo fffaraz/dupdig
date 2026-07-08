@@ -23,6 +23,8 @@ jobs:
           - { goos: darwin,  goarch: arm64 }
           - { goos: windows, goarch: amd64 }
           - { goos: windows, goarch: arm64 }
+          - { goos: freebsd, goarch: amd64 }
+          - { goos: freebsd, goarch: arm64 }
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +41,7 @@ jobs:
         run: |
           bin=dupdig
           [ "$GOOS" = "windows" ] && bin=dupdig.exe
-          go build -ldflags='-s -w' -trimpath -o "$bin" .
+          go build -ldflags="-s -w -X main.version=${GITHUB_REF_NAME}" -trimpath -o "$bin" .
 
       - name: Package
         run: |

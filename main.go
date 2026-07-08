@@ -56,7 +56,14 @@ type dupGroup struct {
 
 var dirHash = strings.Repeat("0", sha256.Size*2) // hard-coded hash for directory paths (all zeros)
 
+var version = "dev" // version is set at build time via -ldflags "-X main.version=..."
+
 func main() {
+	if len(os.Args) == 2 && (os.Args[1] == "-v" || os.Args[1] == "--version") {
+		fmt.Printf("dupdig %s\n", version)
+		return
+	}
+
 	if len(os.Args) != 3 {
 		fmt.Fprintf(os.Stderr, "usage: %s <source directory> <output directory>\n", os.Args[0])
 		os.Exit(1)
