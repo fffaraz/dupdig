@@ -13,6 +13,12 @@ go install github.com/fffaraz/dupdig@latest
 dupdig <source_directory> <output_directory>
 ```
 
+### Docker
+
+```sh
+docker run --rm -v "$PWD:/data" ghcr.io/fffaraz/dupdig /data/source /data/output
+```
+
 ## Output
 
 - `duplicates.txt` — duplicate files sorted by wasted space
