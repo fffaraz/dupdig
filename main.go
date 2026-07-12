@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -57,6 +58,12 @@ type dupGroup struct {
 var dirHash = strings.Repeat("0", sha256.Size*2) // hard-coded hash for directory paths (all zeros)
 
 var version = "dev" // version is set at build time via -ldflags "-X main.version=..."
+
+// shellQuote wraps s in single quotes for safe use in a POSIX shell,
+// escaping any embedded single quotes. Handles spaces, $, `, \, etc.
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
 
 func main() {
 	if len(os.Args) == 2 && (os.Args[1] == "-v" || os.Args[1] == "--version") {
@@ -126,7 +133,8 @@ func main() {
 		os.Exit(1)
 	}
 	defer rmDuplicatesFile.Close()
-	fmt.Fprintf(rmDuplicatesFile, "#!/bin/bash\n\n# This script deletes duplicate files listed in duplicates.txt\n# Review the file before running this script!\n\n")
+	sourceAbs, _ := filepath.Abs(sourceDir)
+	fmt.Fprintf(rmDuplicatesFile, "#!/bin/bash\n\n# This script deletes duplicate files listed in duplicates.txt\n# Review the file before running this script!\n\n# Paths are relative to the scanned source directory:\ncd %s || exit 1\n\n", shellQuote(sourceAbs))
 
 	sourcePrefix := filepath.Clean(sourceDir) + string(filepath.Separator)
 	outputAbs, _ := filepath.Abs(outputDir) // to skip our own output dir if it lives inside the source tree
@@ -168,7 +176,7 @@ func main() {
 			files = append(files, fileInfo{
 				hash: dirHash,
 				size: 0,
-				path: strings.TrimPrefix(path, sourcePrefix),
+				path: filepath.ToSlash(strings.TrimPrefix(path, sourcePrefix)),
 			})
 			return nil
 		}
@@ -194,7 +202,7 @@ func main() {
 		files = append(files, fileInfo{
 			hash: fmt.Sprintf("%x", h.Sum(nil)),
 			size: info.Size(),
-			path: strings.TrimPrefix(path, sourcePrefix),
+			path: filepath.ToSlash(strings.TrimPrefix(path, sourcePrefix)),
 		})
 
 		if len(files)%100 == 0 {
@@ -268,10 +276,10 @@ func main() {
 			for _, p := range d.paths {
 				fmt.Fprintf(duplicatesFile, "\t%s\n", p)
 				if first {
-					fmt.Fprintf(rmDuplicatesFile, "# Keep: \"%s\" %s\n", p, d.hash)
+					fmt.Fprintf(rmDuplicatesFile, "# Keep: %s %s\n", shellQuote(p), d.hash)
 					first = false
 				} else {
-					fmt.Fprintf(rmDuplicatesFile, "rm \"%s\"\n", p)
+					fmt.Fprintf(rmDuplicatesFile, "rm %s\n", shellQuote(p))
 				}
 			}
 			fmt.Fprintln(duplicatesFile)
@@ -309,10 +317,10 @@ func main() {
 	// A directory is empty if no other entry has it as a parent
 	hasChildren := make(map[string]bool)
 	for _, f := range files {
-		parent := filepath.Dir(f.path)
+		parent := path.Dir(f.path)
 		for parent != "." && parent != "" {
 			hasChildren[parent] = true
-			parent = filepath.Dir(parent)
+			parent = path.Dir(parent)
 		}
 	}
 	var emptyDirs []string
