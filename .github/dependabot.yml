@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # Keep GitHub Actions versions current (checkout, setup-go, docker actions, ...)
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  # Keep the Dockerfile base image (golang:1.26-alpine) current
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
