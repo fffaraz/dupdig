@@ -54,13 +54,35 @@ jobs:
             sha256sum "${name}.tar.gz" > "${name}.tar.gz.sha256"
           fi
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.goos }}-${{ matrix.goarch }}-assets
+          path: |
+            dupdig_*.tar.gz
+            dupdig_*.zip
+            dupdig_*.sha256
+
+  release:
+    name: GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+
       - name: Upload to release
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            dupdig_*.tar.gz
-            dupdig_*.zip
-            dupdig_*.sha256
+            assets/dupdig_*.tar.gz
+            assets/dupdig_*.zip
+            assets/dupdig_*.sha256
           generate_release_notes: true
 
   docker:
