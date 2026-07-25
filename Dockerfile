@@ -4,7 +4,7 @@ ARG TARGETOS
 ARG TARGETARCH
 WORKDIR /src
 COPY go.mod main.go ./
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w -X main.version=${VERSION}" -trimpath -o /dupdig .
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -tags netgo -ldflags="-s -w -extldflags '-static' -X main.version=${VERSION}" -trimpath -o /dupdig .
 
 FROM scratch
 COPY --from=builder /dupdig /dupdig
