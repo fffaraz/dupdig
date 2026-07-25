@@ -10,6 +10,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
@@ -83,10 +87,12 @@ jobs:
             assets/dupdig_*.tar.gz
             assets/dupdig_*.zip
             assets/dupdig_*.sha256
+          fail_on_unmatched_files: true
           generate_release_notes: true
 
   docker:
     name: Push Docker image to GHCR
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
