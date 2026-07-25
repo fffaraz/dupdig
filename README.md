@@ -10,7 +10,7 @@ go install github.com/fffaraz/dupdig@latest
 ## Run
 
 ```sh
-dupdig <source_directory> <output_directory>
+nohup dupdig <source_directory> <output_directory> >output.log 2>&1 &
 ```
 
 ### Docker
