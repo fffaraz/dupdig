@@ -46,6 +46,10 @@ A common optimization is to only hash files that share the same size, and then s
 
 SHA-256 is the most common hash used for verifying data integrity. Using it means you can directly compare hashes against officially published values, for example when verifying Linux ISO downloads, without needing a second tool.
 
+**Why not hash files in parallel?**
+
+Most NAS storage is backed by spinning disks, where concurrent reads cause the drive heads to seek back and forth between files. That seek thrashing makes parallel hashing slower than reading files one at a time, so hashing is done sequentially.
+
 **Why remove duplicates instead of replacing them with hard links?**
 
 Hard links are not supported across different filesystems or mount points, and many tools and backup systems do not handle them correctly.
