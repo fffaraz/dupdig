@@ -18,11 +18,16 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/fffaraz/dupdig/internal/tui"
 )
 
 var version = "dev" // version is set at build time via -ldflags "-X main.version=..."
+
+// outputDirName is the directory created in the current working directory
+// where all report files are written.
+const outputDirName = "output"
 
 type uiMode int
 
@@ -41,12 +46,16 @@ func main() {
 	}
 
 	mode, args := parseArgs(args)
-	if len(args) != 2 {
-		fmt.Fprintf(os.Stderr, "usage: %s [--tui|--cli] <source directory> <output directory>\n", os.Args[0])
+	if len(args) != 1 {
+		fmt.Fprintf(os.Stderr, "usage: %s [--tui|--cli] <source directory>\n", os.Args[0])
 		os.Exit(1)
 	}
 
-	sourceDir, outputDir := args[0], args[1]
+	sourceDir := args[0]
+
+	// Single argument mode: the reports are written to an "output" directory
+	// created in the current working directory.
+	outputDir := filepath.Join(".", outputDirName)
 
 	// Run the terminal UI when attached to a TTY, unless overridden.
 	useTUI := mode == modeTUI || (mode == modeAuto && isTerminal(os.Stdout))

@@ -5,12 +5,13 @@ first shows live scan progress, then a browsable, searchable view of the
 results. Pass `--cli` to get the plain log output instead.
 
 ```sh
-dupdig <source_directory> <output_directory>
-dupdig --tui <source_directory> <output_directory>   # force TUI
-dupdig --cli <source_directory> <output_directory>   # force plain mode
+dupdig <source_directory>
+dupdig --tui <source_directory>   # force TUI
+dupdig --cli <source_directory>   # force plain mode
 ```
 
-The report files are always written to `<output_directory>` in both modes.
+The report files are always written to an `output` directory that is created
+in your current working directory.
 
 ## Scan screen
 
@@ -80,5 +81,6 @@ The Summary tab is not filterable.
   terminal for its background colour on launch and wait for the reply. Modern
   terminals answer immediately; most `pty`-based test harnesses never do, so
   startup pauses until a timeout. The TUI proceeds afterwards.
-- **Reports are missing.** The reports live in `<output_directory>` and are
-  written even in TUI mode at the end of the scan — check the path you passed.
+- **Reports are missing.** The reports live in the `output` directory created
+  in your current working directory and are written even in TUI mode at the
+  end of the scan — check `./output`.

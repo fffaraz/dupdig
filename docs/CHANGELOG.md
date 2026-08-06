@@ -31,9 +31,15 @@ is not settled.
 
 - `main.go` slimmed down to argument parsing, mode dispatch and TTY detection;
   the original plain-mode output now lives in `cli.go`.
+- **CLI takes a single source directory.** `dupdig <source_directory>` now
+  writes the six report files to an `output` directory it creates in the
+  current working directory, instead of requiring a second argument.
 - The output contract is unchanged: the six report files and `rm-duplicates.sh`
   are written to the output directory in both modes, byte-identical to the
   original implementation.
+- The `Dockerfile` now copies the whole module (previously only `main.go`) and
+  sets `WORKDIR /data` so `docker run … ghcr.io/fffaraz/dupdig /data/source`
+  writes reports to `/data/output` on the host mount.
 
 ### Fixed
 

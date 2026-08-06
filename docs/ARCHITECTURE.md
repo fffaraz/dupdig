@@ -18,10 +18,13 @@ internal/tui         bubbletea/Lip Gloss terminal UI
 
 1. `-v` / `--version` prints the version and exits.
 2. `parseArgs` strips leading `--tui` / `--cli` flags, falling back to `modeAuto`.
-3. In auto mode the TUI is chosen when `os.Stdout` is a terminal: `os.Stdout`
+3. The single positional argument is the `SourceDir`. The output directory is
+   fixed to `./output` (see the `outputDirName` constant) and created in the
+   current working directory.
+4. In auto mode the TUI is chosen when `os.Stdout` is a terminal: `os.Stdout`
    `Stat()` reports `os.ModeCharDevice`. Piped, `nohup` and Docker invocations
    therefore always take the plain path.
-4. The TUI mode ignores the returned exit code (it is interactive); the plain
+5. The TUI mode ignores the returned exit code (it is interactive); the plain
    mode returns an exit code from `runCLI`.
 
 Exit codes (plain mode): `0` success, `1` scan failure (e.g. unwritable output

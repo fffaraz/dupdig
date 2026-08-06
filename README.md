@@ -16,22 +16,25 @@ When invoked from an interactive terminal, dupdig launches a full-screen
 terminal UI (TUI): it shows live scan progress and then lets you browse
 duplicates, files, empty files/dirs and errors with search.
 
+Reports are written to an `output` directory that dupdig creates in the
+current working directory:
+
 ```sh
-dupdig <source_directory> <output_directory>
+dupdig <source_directory>
 ```
 
 Force a mode explicitly:
 
 ```sh
-dupdig --tui <source_directory> <output_directory>   # interactive TUI
-dupdig --cli <source_directory> <output_directory>   # plain log output
+dupdig --tui <source_directory>   # interactive TUI
+dupdig --cli <source_directory>   # plain log output
 ```
 
 When stdout is not a TTY (piped, `nohup`, Docker) dupdig always runs in
 plain mode, keeping the original behavior:
 
 ```sh
-nohup dupdig --cli <source_directory> <output_directory> >output.log 2>&1 &
+nohup dupdig --cli <source_directory> >output.log 2>&1 &
 ```
 
 ### TUI keys
@@ -46,8 +49,8 @@ nohup dupdig --cli <source_directory> <output_directory> >output.log 2>&1 &
 | `r`             | re-scan                         |
 | `q` / `Ctrl+C`  | quit                            |
 
-The report files are always written to `<output_directory>` in both modes, so
-the plain CLI script is still available whenever needed.
+The report files are always written to the `output` directory in your current
+working directory, so the plain CLI script is still available whenever needed.
 
 Exit codes (plain mode):
 
@@ -60,10 +63,16 @@ Exit codes (plain mode):
 ### Docker
 
 ```sh
-docker run --rm -v "$PWD:/data" ghcr.io/fffaraz/dupdig /data/source /data/output
+docker run --rm -v "$PWD:/data" ghcr.io/fffaraz/dupdig /data/source
 ```
 
+The report files are written to `/data/output` (i.e. `$PWD/output` on the
+host) because the container's working directory is `/data`.
+
 ## Output
+
+The reports land in the `output` directory created in your current working
+directory:
 
 - `duplicates.txt` — duplicate files sorted by wasted space
 - `files.txt` — all files with hashes and sizes
