@@ -8,10 +8,12 @@ results. Pass `--cli` to get the plain log output instead.
 dupdig <source_directory>
 dupdig --tui <source_directory>   # force TUI
 dupdig --cli <source_directory>   # force plain mode
+dupdig --ignore node_modules --ignore .git <source_directory>
 ```
 
-The report files are always written to an `output` directory that is created
-in your current working directory.
+The `--ignore` flag skips directories or files by name or relative path and
+works in both modes. The report files are always written to an `output`
+directory that is created in your current working directory.
 
 ## Scan screen
 

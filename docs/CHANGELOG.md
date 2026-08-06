@@ -21,6 +21,9 @@ is not settled.
 - `--tui` / `--cli` flags to force a mode. Auto mode prefers the TUI when
   stdout is a TTY, exactly as before when piped (Docker, `nohup`, CI).
 - `-v` / `--version` flag.
+- `--ignore <dir-or-file>` flag (repeatable) to skip directories/files by
+  name (matched anywhere in the tree) or by slash-separated relative path
+  (matched with its whole subtree); works in both `--cli` and TUI modes.
 - `internal/scan` package: the walk + SHA-256 hashing + report generation is
   factored out of `main.go` and exposed as a structured `Result` with live
   `Progress` events. The six text reports are byte-identical to the original.

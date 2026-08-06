@@ -11,7 +11,7 @@ import (
 
 // runCLI performs a scan in the plain non-interactive mode, mirroring the
 // original command-line output. It returns the process exit code.
-func runCLI(sourceDir, outputDir string) int {
+func runCLI(sourceDir, outputDir string, ignore []string) int {
 	log := func(format string, args ...interface{}) {
 		fmt.Printf("%s %s\n", time.Now().Format("2006-01-02 15:04:05"), fmt.Sprintf(format, args...))
 	}
@@ -19,6 +19,7 @@ func runCLI(sourceDir, outputDir string) int {
 	_, err := scan.Run(scan.Options{
 		SourceDir: sourceDir,
 		OutputDir: outputDir,
+		Ignore:    ignore,
 		Log:       log,
 	})
 	if err != nil {

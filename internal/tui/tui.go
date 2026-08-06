@@ -51,6 +51,7 @@ type tickMsg struct{}
 type model struct {
 	sourceDir string
 	outputDir string
+	ignore    []string
 
 	progCh chan scan.Progress
 	doneCh chan scanMsg
@@ -86,16 +87,17 @@ type model struct {
 }
 
 // UI runs the interactive terminal interface until the user quits.
-func UI(sourceDir, outputDir string) error {
-	p := tea.NewProgram(newModel(sourceDir, outputDir), tea.WithAltScreen())
+func UI(sourceDir, outputDir string, ignore []string) error {
+	p := tea.NewProgram(newModel(sourceDir, outputDir, ignore), tea.WithAltScreen())
 	_, err := p.Run()
 	return err
 }
 
-func newModel(sourceDir, outputDir string) *model {
+func newModel(sourceDir, outputDir string, ignore []string) *model {
 	return &model{
 		sourceDir: sourceDir,
 		outputDir: outputDir,
+		ignore:    ignore,
 		tab:       tabSummary,
 		expanded:  make(map[int]bool),
 	}
@@ -124,6 +126,7 @@ func (m *model) startScan() tea.Cmd {
 		res, err := scan.Run(scan.Options{
 			SourceDir: m.sourceDir,
 			OutputDir: m.outputDir,
+			Ignore:    m.ignore,
 			Ctx:       ctx,
 			Progress: func(p scan.Progress) {
 				select {

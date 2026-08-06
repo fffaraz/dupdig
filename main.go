@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/fffaraz/dupdig/internal/tui"
 )
@@ -45,9 +46,9 @@ func main() {
 		return
 	}
 
-	mode, args := parseArgs(args)
+	mode, args, ignore := parseArgs(args)
 	if len(args) != 1 {
-		fmt.Fprintf(os.Stderr, "usage: %s [--tui|--cli] <source directory>\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "usage: %s [--tui|--cli] [--ignore <dir-or-file>] <source directory>\n", os.Args[0])
 		os.Exit(1)
 	}
 
@@ -60,32 +61,44 @@ func main() {
 	// Run the terminal UI when attached to a TTY, unless overridden.
 	useTUI := mode == modeTUI || (mode == modeAuto && isTerminal(os.Stdout))
 	if useTUI {
-		if err := tui.UI(sourceDir, outputDir); err != nil {
+		if err := tui.UI(sourceDir, outputDir, ignore); err != nil {
 			fmt.Fprintf(os.Stderr, "dupdig: %v\n", err)
 		}
 		return
 	}
 
-	os.Exit(runCLI(sourceDir, outputDir))
+	os.Exit(runCLI(sourceDir, outputDir, ignore))
 }
 
-// parseArgs strips leading mode flags and returns the remaining positional
-// arguments.
-func parseArgs(args []string) (uiMode, []string) {
+// parseArgs strips leading mode and ignore flags and returns the remaining
+// positional arguments together with the collected ignore patterns.
+func parseArgs(args []string) (uiMode, []string, []string) {
 	mode := modeAuto
-	rest := make([]string, 0, len(args))
-	for i := 0; i < len(args); i++ {
-		switch args[i] {
-		case "--tui", "-tui":
+	var ignore []string
+	positional := make([]string, 0, len(args))
+	i := 0
+	for i < len(args) {
+		a := args[i]
+		switch {
+		case a == "--tui" || a == "-tui":
 			mode = modeTUI
-		case "--cli", "-cli":
+		case a == "--cli" || a == "-cli":
 			mode = modeCLI
+		case a == "--ignore" || a == "-i":
+			if i+1 < len(args) {
+				i++
+				ignore = append(ignore, args[i])
+			}
+		case strings.HasPrefix(a, "--ignore="):
+			ignore = append(ignore, strings.TrimPrefix(a, "--ignore="))
 		default:
-			rest = append(rest, args[i:]...)
-			return mode, rest
+			positional = append(positional, args[i:]...)
+			i = len(args)
+			continue
 		}
+		i++
 	}
-	return mode, rest
+	return mode, positional, ignore
 }
 
 // isTerminal reports whether f is attached to a TTY (a character device).

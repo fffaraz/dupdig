@@ -30,6 +30,18 @@ dupdig --tui <source_directory>   # interactive TUI
 dupdig --cli <source_directory>   # plain log output
 ```
 
+Skip directories or files by name or relative path with `--ignore`
+(repeatable):
+
+```sh
+dupdig --ignore node_modules --ignore .git /path/to/source
+```
+
+A pattern matches any directory or file with that name anywhere in the tree
+(e.g. `node_modules` skips every `node_modules` directory) or an exact
+slash-separated relative path including its whole subtree. Separately
+`.git`, `.config`, `.cache` and `.local` are always skipped.
+
 When stdout is not a TTY (piped, `nohup`, Docker) dupdig always runs in
 plain mode, keeping the original behavior:
 
@@ -86,6 +98,12 @@ directory:
 **What about symlinks?**
 
 Symlinks are skipped. Only regular files are hashed.
+
+**How do I skip directories or files I don't care about?**
+
+Pass `--ignore` once per pattern, e.g. `dupdig --ignore node_modules --ignore
+cache.json /path/to/source`. Patterns match by entry name anywhere in the tree
+or by slash-separated relative path (including its subtree).
 
 **What about hard links and copy-on-write files?**
 

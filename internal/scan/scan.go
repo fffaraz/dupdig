@@ -92,6 +92,12 @@ type Options struct {
 	SourceDir string
 	OutputDir string
 
+	// Ignore lists directories or files to skip. Each pattern may be a
+	// directory or file name (matched against any entry of that name) or a
+	// slash-separated relative path (matched against that exact path and its
+	// whole subtree).
+	Ignore []string
+
 	// Ctx cancels an in-progress scan (may be nil).
 	Ctx context.Context
 
@@ -100,6 +106,36 @@ type Options struct {
 
 	// Progress is invoked after each entry is hashed (may be nil).
 	Progress func(Progress)
+}
+
+// compileIgnores normalizes user-supplied ignore patterns. Patterns are
+// trimmed, converted to forward slashes and stripped of leading/trailing
+// slashes.
+func compileIgnores(patterns []string) []string {
+	out := make([]string, 0, len(patterns))
+	for _, p := range patterns {
+		p = filepath.ToSlash(strings.TrimSpace(p))
+		p = strings.Trim(p, "/")
+		p = strings.TrimPrefix(p, "./")
+		if p == "" || p == "." {
+			continue
+		}
+		out = append(out, p)
+	}
+	return out
+}
+
+// matchesIgnore reports whether the entry named name at slash-separated
+// relative path rel matches one of the normalized patterns. A pattern matches
+// the entry either by name (anywhere in the tree) or as a prefix of the
+// relative path (covering the whole subtree).
+func matchesIgnore(rel, name string, patterns []string) bool {
+	for _, p := range patterns {
+		if p == name || p == rel || strings.HasPrefix(rel, p+"/") {
+			return true
+		}
+	}
+	return false
 }
 
 // ScanError reports a failure to run a scan. Walk reports whether the error
@@ -191,6 +227,8 @@ func Run(o Options) (*Result, error) {
 
 	logf("Starting scan of %s...", sourceDir)
 
+	ignorePatterns := compileIgnores(o.Ignore)
+
 	var files []FileInfo
 	var bytesHashed int64
 	walkErr := filepath.Walk(sourceDir, func(filePath string, info os.FileInfo, err error) error {
@@ -211,7 +249,14 @@ func Run(o Options) (*Result, error) {
 			return nil
 		}
 
+		rel := filepath.ToSlash(strings.TrimPrefix(filePath, sourcePrefix))
+		name := info.Name()
+
 		if info.IsDir() {
+			if matchesIgnore(rel, name, ignorePatterns) {
+				errorf("skipping ignored directory: %s", filePath)
+				return filepath.SkipDir
+			}
 			absPath, _ := filepath.Abs(filePath)
 			if systemDirs[absPath] {
 				errorf("skipping system directory: %s", filePath)
@@ -238,6 +283,11 @@ func Run(o Options) (*Result, error) {
 
 		if !info.Mode().IsRegular() {
 			errorf("skipping non-regular file: %s", filePath)
+			return nil
+		}
+
+		if matchesIgnore(rel, name, ignorePatterns) {
+			errorf("skipping ignored file: %s", filePath)
 			return nil
 		}
 

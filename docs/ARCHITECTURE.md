@@ -36,12 +36,19 @@ maps to `2`.
 The package deliberately has **no external dependencies**. Everything the TUI
 and CLI need is exposed as data:
 
-- `Options` — `SourceDir`, `OutputDir`, optional `Ctx`, `Log` and `Progress`.
+- `Options` — `SourceDir`, `OutputDir`, `Ignore` (user-supplied skip
+  patterns), plus optional `Ctx`, `Log` and `Progress`.
 - `Progress` — per-file status (`Hashed`, `BytesHashed`, `CurrentPath`,
   `LastError`, `ErrorCount`, `Elapsed`) delivered after each hashed entry.
 - `Result` — the finished outcome: `Files`, `DupGroups`, `EmptyFiles`,
   `EmptyDirs`, `Errors` and a `Stats` summary.
 - `ScanError` — wraps failures; `Walk` distinguishes walk failures.
+
+Ignore patterns are normalized by `compileIgnores` and matched by
+`matchesIgnore`: a pattern matches an entry by name (anywhere in the tree) or
+as a prefix of the slash-separated relative path, covering the whole subtree.
+This is in addition to the built-in `.git`/`.config`/`.cache`/`.local`
+skips and the `/dev`, `/proc`, `/run`, `/sys` system roots.
 
 `Run(Options)`:
 

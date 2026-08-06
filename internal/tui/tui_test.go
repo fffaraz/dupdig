@@ -38,7 +38,7 @@ func sampleResult() *scan.Result {
 }
 
 func newTestModel(res *scan.Result) *model {
-	m := newModel("/src", "/out")
+	m := newModel("/src", "/out", nil)
 	m.width, m.height = 80, 24
 	m.result = res
 	m.scanning = false

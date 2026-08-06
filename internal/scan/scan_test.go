@@ -104,6 +104,63 @@ func TestRunIgnoresGitAndSkipsSymlinks(t *testing.T) {
 	}
 }
 
+func TestRunUsesUserIgnorePatterns(t *testing.T) {
+	src := t.TempDir()
+	out := filepath.Join(t.TempDir(), "out")
+
+	// node_modules and .git should be matched by name anywhere in the tree,
+	// secret.env by filename, and src/vendor by relative path (with its
+	// subtree).
+	writeFile(t, filepath.Join(src, "node_modules", "pkg", "index.js"), "mod")
+	writeFile(t, filepath.Join(src, "src", "node_modules", "deep.js"), "deep")
+	writeFile(t, filepath.Join(src, ".git", "config"), "git")
+	writeFile(t, filepath.Join(src, "secret.env"), "secret")
+	writeFile(t, filepath.Join(src, "src", "vendor", "lib.so"), "binary")
+	writeFile(t, filepath.Join(src, "src", "vendor", "deep", "extra.bin"), "more")
+	writeFile(t, filepath.Join(src, "keep.txt"), "keep")
+
+	res, err := Run(Options{
+		SourceDir: src,
+		OutputDir: out,
+		Ignore:    []string{"node_modules", ".git", "secret.env", "src/vendor"},
+	})
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	found := false
+	for _, f := range res.Files {
+		switch {
+		case strings.Contains(f.Path, "node_modules"):
+			t.Errorf("node_modules not ignored: %s", f.Path)
+		case strings.HasPrefix(f.Path, ".git"):
+			t.Errorf(".git not ignored: %s", f.Path)
+		case f.Path == "secret.env":
+			t.Errorf("secret.env not ignored: %s", f.Path)
+		case strings.HasPrefix(f.Path, "src/vendor"):
+			t.Errorf("src/vendor subtree not ignored: %s", f.Path)
+		case f.Path == "keep.txt":
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("keep.txt should have been scanned")
+	}
+}
+
+func TestCompileIgnoresNormalizesPatterns(t *testing.T) {
+	got := compileIgnores([]string{" node_modules/ ", "/.git", "./src/", "", "."})
+	want := []string{"node_modules", ".git", "src"}
+	if len(got) != len(want) {
+		t.Fatalf("expected %d patterns, got %d: %v", len(want), len(got), got)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("pattern %d: expected %q, got %q", i, want[i], got[i])
+		}
+	}
+}
+
 func TestNoReportsHeadersWhenNoDuplicates(t *testing.T) {
 	src := t.TempDir()
 	out := filepath.Join(t.TempDir(), "out")
