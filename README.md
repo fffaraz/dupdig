@@ -1,5 +1,8 @@
 # dupdig
-CLI tool that walks a directory tree, hashes every file with SHA-256, and generates reports on duplicate files.
+
+CLI tool that walks a directory tree, hashes every file with SHA-256, and generates reports on duplicate files. When run from an interactive terminal it also offers a full-screen TUI for browsing the results.
+
+See the [docs](docs/) for the [TUI user guide](docs/TUI.md), the [architecture](docs/ARCHITECTURE.md) and the [changelog](docs/CHANGELOG.md).
 
 ## Install
 
@@ -9,9 +12,50 @@ go install github.com/fffaraz/dupdig@latest
 
 ## Run
 
+When invoked from an interactive terminal, dupdig launches a full-screen
+terminal UI (TUI): it shows live scan progress and then lets you browse
+duplicates, files, empty files/dirs and errors with search.
+
 ```sh
-nohup dupdig <source_directory> <output_directory> >output.log 2>&1 &
+dupdig <source_directory> <output_directory>
 ```
+
+Force a mode explicitly:
+
+```sh
+dupdig --tui <source_directory> <output_directory>   # interactive TUI
+dupdig --cli <source_directory> <output_directory>   # plain log output
+```
+
+When stdout is not a TTY (piped, `nohup`, Docker) dupdig always runs in
+plain mode, keeping the original behavior:
+
+```sh
+nohup dupdig --cli <source_directory> <output_directory> >output.log 2>&1 &
+```
+
+### TUI keys
+
+| Key             | Action                          |
+| --------------- | ------------------------------- |
+| `1`–`6` / `Tab` | switch tab                      |
+| `↑` / `↓`       | move through rows (scrolls)     |
+| `↩`             | expand/collapse a duplicate group |
+| `/`             | filter current list (Esc clear) |
+| `g` / `G`       | jump to top / bottom            |
+| `r`             | re-scan                         |
+| `q` / `Ctrl+C`  | quit                            |
+
+The report files are always written to `<output_directory>` in both modes, so
+the plain CLI script is still available whenever needed.
+
+Exit codes (plain mode):
+
+| Code | Meaning                                    |
+| ---- | ------------------------------------------ |
+| `0`  | scan completed                             |
+| `1`  | scan failed (e.g. output not writable)     |
+| `2`  | failed while walking the source tree       |
 
 ### Docker
 
@@ -53,6 +97,17 @@ Most NAS storage is backed by spinning disks, where concurrent reads cause the d
 **Why remove duplicates instead of replacing them with hard links?**
 
 Hard links are not supported across different filesystems or mount points, and many tools and backup systems do not handle them correctly.
+
+**What changed in the UI version?**
+
+`dupdig` now launches a full-screen TUI automatically when attached to a TTY
+(`--tui` to force it, `--cli` for the plain log output). The scan core was
+refactored into the `internal/scan` package, which exposes the same walk and
+report generation as a structured `Result` plus live `Progress` events; the
+text report files are byte-identical to before. The TUI lives in `internal/tui`
+and is built with [bubbletea](https://github.com/charmbracelet/bubbletea) and
+[Lip Gloss](https://github.com/charmbracelet/lipgloss). See
+[docs/TUI.md](docs/TUI.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## License
 
